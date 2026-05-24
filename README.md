@@ -31,6 +31,7 @@
 - [Environment Variables & Secrets](#-environment-variables--secrets)
 - [File Reference](#-file-reference)
 - [Challenges & Lessons Learned](#-challenges--lessons-learned)
+- [📸 Proof of Deployment](#-proof-of-deployment)
 
 ---
 
@@ -595,6 +596,105 @@ Every real-world deployment surfaces unexpected issues. Below are the key blocke
 - **AWS Load Balancer Controller** is a prerequisite for ALB-backed Kubernetes ingress — it does not come pre-installed with EKS
 - **EKS public endpoint access** must be enabled for local `kubectl` access unless you're inside the VPC
 - **Helm-managed resources** should always be modified through Helm, not `kubectl delete` directly
+
+---
+
+## 📸 Proof of Deployment
+
+> All screenshots below were taken from the live deployment on AWS EKS (`ap-south-1`).
+> Save your screenshots to `./screenshots/` with the filenames shown in each caption.
+
+---
+
+### ☸️ EKS Cluster — Worker Nodes
+
+> `kubectl get nodes` — 2 nodes running Kubernetes v1.29 in `ap-south-1`
+
+![kubectl get nodes](./screenshots/01-kubectl-get-nodes.png)
+
+---
+
+### 🚀 Application Pods
+
+> `kubectl get pods -n assignment` — both replicas of `assignment-app` in `Running` state with 0 restarts
+
+![kubectl get pods](./screenshots/02-kubectl-get-pods.png)
+
+---
+
+### 🔌 Kubernetes Service
+
+> `kubectl get svc -n assignment` — `ClusterIP` service routing port 80 → 5000 to the Flask app
+
+![kubectl get svc](./screenshots/03-kubectl-get-svc.png)
+
+---
+
+### ⚖️ ALB Ingress
+
+> `kubectl get ingress -n assignment` — AWS ALB provisioned by the Load Balancer Controller
+
+![kubectl get ingress](./screenshots/04-kubectl-get-ingress.png)
+
+**ALB URL:**
+```
+k8s-assignme-assignme-7004ea4e21-1480218414.ap-south-1.elb.amazonaws.com
+```
+
+---
+
+### 🌐 Live Application in Browser
+
+> Flask app accessible over the internet via the ALB URL — responding `DevOps Assignment Running Successfully`
+
+![Live app in browser](./screenshots/05-app-live-browser.png)
+
+---
+
+### 📊 Monitoring Stack — Pods
+
+> `kubectl get pods -n monitoring` — full kube-prometheus-stack (Prometheus, Grafana, Alertmanager, Node Exporter, kube-state-metrics) all `Running`
+
+![kubectl get pods monitoring](./screenshots/06-kubectl-get-pods-monitoring.png)
+
+| Pod | Role |
+|---|---|
+| `alertmanager-*` | Alert routing & notification |
+| `monitoring-grafana-*` | Dashboard visualisation (port 3000) |
+| `monitoring-kube-prometheus-operator-*` | Manages Prometheus CRDs |
+| `monitoring-kube-state-metrics-*` | K8s object state metrics |
+| `monitoring-prometheus-node-exporter-*` | Per-node CPU/Mem/Disk metrics (×2 nodes) |
+| `prometheus-monitoring-kube-prometheus-prometheus-*` | Prometheus TSDB (port 9090) |
+
+---
+
+### 📈 Grafana — Kubernetes API Server Dashboard
+
+> Grafana Kubernetes dashboard showing **100.000% Availability** over 30 days with live Read/Write SLI request rates and error budgets — accessed at `localhost:3000` via `kubectl port-forward`
+
+![Grafana Kubernetes Dashboard](./screenshots/07-grafana-kubernetes-dashboard.png)
+
+| Panel | Value |
+|---|---|
+| Availability (30d) | **100.000%** |
+| Read Availability (30d) | **100.000%** |
+| Write Availability (30d) | **100.000%** |
+| Read SLI Requests | ~5.3–5.5 req/s |
+| Write SLI Requests | ~3.1 req/s |
+| Error Budget (30d) | > 99.000% remaining |
+
+---
+
+### 🔍 Prometheus — Live CPU Metrics Query
+
+> Prometheus query `100 - (avg by(instance)(rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)` returning per-node CPU usage for both EKS worker nodes — accessed at `localhost:9090` via `kubectl port-forward`
+
+![Prometheus CPU Query](./screenshots/08-prometheus-cpu-query.png)
+
+| Instance | Description |
+|---|---|
+| `10.0.3.21:9100` | EKS Node in private subnet `ap-south-1a` |
+| `10.0.4.143:9100` | EKS Node in private subnet `ap-south-1b` |
 
 ---
 
