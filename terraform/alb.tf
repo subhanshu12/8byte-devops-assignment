@@ -1,0 +1,1 @@
+# ALB will be provisioned through Kubernetes ingress controller

@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: assignment-service
+  namespace: assignment
+
+spec:
+  type: ClusterIP
+
+  selector:
+    app: assignment-app
+
+  ports:
+  - port: 80
+    targetPort: 5000

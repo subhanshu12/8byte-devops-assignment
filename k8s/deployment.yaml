@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: assignment-app
+  namespace: assignment
+
+spec:
+  replicas: 2
+
+  selector:
+    matchLabels:
+      app: assignment-app
+
+  template:
+    metadata:
+      labels:
+        app: assignment-app
+
+    spec:
+      containers:
+        - name: assignment-app
+          image: 022599238981.dkr.ecr.ap-south-1.amazonaws.com/assignment-app:v1
+
+          ports:
+            - containerPort: 5000
+
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "250m"
+
+            limits:
+              memory: "256Mi"
+              cpu: "500m"
