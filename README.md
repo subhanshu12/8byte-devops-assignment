@@ -610,7 +610,8 @@ Every real-world deployment surfaces unexpected issues. Below are the key blocke
 
 > `kubectl get nodes` — 2 nodes running Kubernetes v1.29 in `ap-south-1`
 
-![kubectl get nodes](./screenshots/01-kubectl-get-nodes.png)
+![kubectl get nodes](./screenshots/01-kubectl-get-nodes.png) <img width="783" height="69" alt="image" src="https://github.com/user-attachments/assets/4add646f-c72d-408a-88d1-f0eb454f54b1" />
+
 
 ---
 
@@ -618,7 +619,8 @@ Every real-world deployment surfaces unexpected issues. Below are the key blocke
 
 > `kubectl get pods -n assignment` — both replicas of `assignment-app` in `Running` state with 0 restarts
 
-![kubectl get pods](./screenshots/02-kubectl-get-pods.png)
+![kubectl get pods](./screenshots/02-kubectl-get-pods.png) <img width="806" height="74" alt="image" src="https://github.com/user-attachments/assets/79d22914-5fdd-4202-8c9b-244f20b8f9f4" />
+
 
 ---
 
@@ -626,7 +628,8 @@ Every real-world deployment surfaces unexpected issues. Below are the key blocke
 
 > `kubectl get svc -n assignment` — `ClusterIP` service routing port 80 → 5000 to the Flask app
 
-![kubectl get svc](./screenshots/03-kubectl-get-svc.png)
+![kubectl get svc](./screenshots/03-kubectl-get-svc.png) <img width="834" height="58" alt="image" src="https://github.com/user-attachments/assets/98be4317-8ad8-4fe7-92ed-07ec363f73ba" />
+
 
 ---
 
@@ -634,7 +637,8 @@ Every real-world deployment surfaces unexpected issues. Below are the key blocke
 
 > `kubectl get ingress -n assignment` — AWS ALB provisioned by the Load Balancer Controller
 
-![kubectl get ingress](./screenshots/04-kubectl-get-ingress.png)
+![kubectl get ingress](./screenshots/04-kubectl-get-ingress.png) <img width="922" height="64" alt="image" src="https://github.com/user-attachments/assets/54785953-6689-4953-a257-8dc8ca18b729" />
+
 
 **ALB URL:**
 ```
@@ -647,7 +651,8 @@ k8s-assignme-assignme-7004ea4e21-1480218414.ap-south-1.elb.amazonaws.com
 
 > Flask app accessible over the internet via the ALB URL — responding `DevOps Assignment Running Successfully`
 
-![Live app in browser](./screenshots/05-app-live-browser.png)
+![Live app in browser](./screenshots/05-app-live-browser.png) <img width="1043" height="232" alt="image" src="https://github.com/user-attachments/assets/163ebe47-bc42-498e-a21b-329b1bedc267" />
+
 
 ---
 
@@ -655,7 +660,8 @@ k8s-assignme-assignme-7004ea4e21-1480218414.ap-south-1.elb.amazonaws.com
 
 > `kubectl get pods -n monitoring` — full kube-prometheus-stack (Prometheus, Grafana, Alertmanager, Node Exporter, kube-state-metrics) all `Running`
 
-![kubectl get pods monitoring](./screenshots/06-kubectl-get-pods-monitoring.png)
+![kubectl get pods monitoring](./screenshots/06-kubectl-get-pods-monitoring.png) <img width="783" height="144" alt="image" src="https://github.com/user-attachments/assets/2a61ce64-6f7d-4238-a7f1-3a0f3e284335" />
+
 
 | Pod | Role |
 |---|---|
@@ -672,7 +678,8 @@ k8s-assignme-assignme-7004ea4e21-1480218414.ap-south-1.elb.amazonaws.com
 
 > Grafana Kubernetes dashboard showing **100.000% Availability** over 30 days with live Read/Write SLI request rates and error budgets — accessed at `localhost:3000` via `kubectl port-forward`
 
-![Grafana Kubernetes Dashboard](./screenshots/07-grafana-kubernetes-dashboard.png)
+![Grafana Kubernetes Dashboard](./screenshots/07-grafana-kubernetes-dashboard.png) <img width="1847" height="950" alt="image" src="https://github.com/user-attachments/assets/4357a45f-2581-4fdc-bef1-d2f263104654" />
+
 
 | Panel | Value |
 |---|---|
@@ -689,7 +696,8 @@ k8s-assignme-assignme-7004ea4e21-1480218414.ap-south-1.elb.amazonaws.com
 
 > Prometheus query `100 - (avg by(instance)(rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)` returning per-node CPU usage for both EKS worker nodes — accessed at `localhost:9090` via `kubectl port-forward`
 
-![Prometheus CPU Query](./screenshots/08-prometheus-cpu-query.png)
+![Prometheus CPU Query](./screenshots/08-prometheus-cpu-query.png) <img width="1911" height="1011" alt="image" src="https://github.com/user-attachments/assets/25248025-b417-47bc-9310-ae9817d6f9e8" />
+
 
 | Instance | Description |
 |---|---|
