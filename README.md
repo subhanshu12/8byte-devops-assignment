@@ -30,6 +30,7 @@
 - [CI/CD Pipeline](#-cicd-pipeline)
 - [Environment Variables & Secrets](#-environment-variables--secrets)
 - [File Reference](#-file-reference)
+- [Challenges & Lessons Learned](#-challenges--lessons-learned)
 
 ---
 
@@ -544,6 +545,56 @@ helm uninstall loki -n monitoring
 # Destroy all AWS infrastructure
 cd terraform && terraform destroy
 ```
+
+---
+
+## 🧩 Challenges & Lessons Learned
+
+Every real-world deployment surfaces unexpected issues. Below are the key blockers encountered during this assignment, their root causes, and exactly how they were resolved.
+
+### 🗄️ Infrastructure (Terraform)
+
+| # | Challenge | Root Cause | Resolution |
+|---|---|---|---|
+| 1 | **Terraform backend `init` failed** | S3 bucket `subhanshu-terraform-state-bucket` did not exist before running `terraform init` | Manually created the S3 bucket and DynamoDB lock table in AWS Console first, then re-ran `terraform init` |
+| 2 | **RDS PostgreSQL engine version mismatch** | The specified PostgreSQL engine version was not available in `ap-south-1` | Checked available versions with `aws rds describe-db-engine-versions` and updated `rds.tf` to use version `14` |
+| 3 | **EKS node group creation failed** | Specified AMI type was not compatible with the EKS Kubernetes version requested | Updated `eks.tf` to use `AL2023_x86_64_STANDARD` AMI and aligned Kubernetes version to `1.29` |
+
+---
+
+### ☸️ Kubernetes & Networking
+
+| # | Challenge | Root Cause | Resolution |
+|---|---|---|---|
+| 4 | **EKS API endpoint timeout** | EKS cluster only had private endpoint access enabled; local machine could not reach the API server | Enabled `cluster_endpoint_public_access = true` in `eks.tf` to allow kubeconfig access from local machine |
+| 5 | **`ImagePullBackOff` on EKS pods** | ECR repository URI or image tag was incorrectly configured in `deployment.yaml` | Verified the full ECR URI, confirmed image was pushed successfully, and corrected the image reference in the deployment manifest |
+| 6 | **ALB Ingress not provisioning** | AWS Load Balancer Controller was not installed, and public subnets were missing the required `kubernetes.io/role/elb` tag | Installed AWS LB Controller via Helm using the IRSA role backed by `iam_policy.json`; added correct subnet tags |
+
+---
+
+### 🐳 Docker & Build
+
+| # | Challenge | Root Cause | Resolution |
+|---|---|---|---|
+| 7 | **Docker image crashed on EKS (ARM64 / AMD64 mismatch)** | Image was built locally on an Apple Silicon (ARM64) Mac, but EKS nodes run `x86_64` (AMD64) | Switched to `docker buildx build --platform linux/amd64` in the CD pipeline to force correct architecture |
+
+---
+
+### 📊 Monitoring
+
+| # | Challenge | Root Cause | Resolution |
+|---|---|---|---|
+| 8 | **Grafana deployment inconsistency after secret deletion** | Deleting the Grafana admin secret caused the Helm-managed deployment to enter an inconsistent state | Fully uninstalled the `monitoring` Helm release and reinstalled `kube-prometheus-stack` cleanly |
+
+---
+
+### 💡 Key Takeaways
+
+- **Always create Terraform remote state resources (S3 + DynamoDB) before running `terraform init`**
+- **Multi-architecture Docker builds** (`--platform linux/amd64`) are essential when developing on ARM Macs and deploying to x86 cloud nodes
+- **AWS Load Balancer Controller** is a prerequisite for ALB-backed Kubernetes ingress — it does not come pre-installed with EKS
+- **EKS public endpoint access** must be enabled for local `kubectl` access unless you're inside the VPC
+- **Helm-managed resources** should always be modified through Helm, not `kubectl delete` directly
 
 ---
 
