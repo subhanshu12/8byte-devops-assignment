@@ -18,10 +18,11 @@ spec:
         app: assignment-app
 
     spec:
-      containers:
-        - name: assignment-app
-          image: 022599238981.dkr.ecr.ap-south-1.amazonaws.com/assignment-app:v1
 
+      containers:
+        - name: flask-app
+          image: 022599238981.dkr.ecr.ap-south-1.amazonaws.com/flask-app:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 5000
 
