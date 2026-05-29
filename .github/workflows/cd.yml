@@ -1,21 +1,24 @@
-name: CD Pipeline
+name: CD
 
 on:
   push:
     branches:
       - main
 
-env:
-  AWS_REGION: ap-south-1
-  ECR_REPOSITORY: assignment-app
-  EKS_CLUSTER_NAME: assignment-eks
-
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: read
+
+    env:
+      AWS_REGION: ap-south-1
+      EKS_CLUSTER_NAME: assignment-eks
+      ECR_REPOSITORY: flask-app
+
     steps:
-      - name: Checkout Code
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Configure AWS Credentials
@@ -23,32 +26,40 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ap-south-1
+          aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Login to Amazon ECR
+      - name: Login to ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Build Docker Image
-        run: |
-          docker buildx build \
-          --platform linux/amd64 \
-          -t ${{ steps.login-ecr.outputs.registry }}/assignment-app:${{ github.sha }} \
-          ./app \
-          --push
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-      - name: Update kubeconfig
+      - name: Build and Push Image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./app
+          push: true
+          platforms: linux/amd64
+          tags: |
+            ${{ steps.login-ecr.outputs.registry }}/flask-app:${{ github.sha }}
+            ${{ steps.login-ecr.outputs.registry }}/flask-app:latest
+
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v4
+
+      - name: Configure kubeconfig
         run: |
           aws eks update-kubeconfig \
-          --region ap-south-1 \
-          --name assignment-eks
+            --region ap-south-1 \
+            --name assignment-eks
 
-      - name: Deploy to Kubernetes
+      - name: Update Deployment
         run: |
           kubectl set image deployment/assignment-app \
-          assignment-app=${{ steps.login-ecr.outputs.registry }}/assignment-app:${{ github.sha }} \
+          flask-app=${{ steps.login-ecr.outputs.registry }}/flask-app:${{ github.sha }} \
           -n assignment
 
-      - name: Verify Deployment
+      - name: Verify Rollout
         run: |
           kubectl rollout status deployment/assignment-app -n assignment

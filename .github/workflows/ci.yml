@@ -1,4 +1,4 @@
-name: CI Pipeline
+name: CI
 
 on:
   pull_request:
@@ -6,29 +6,35 @@ on:
       - main
 
 jobs:
-  test:
+  validate:
     runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: app
 
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Set up Python
+      - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
       - name: Install Dependencies
         run: |
-          cd app
           pip install -r requirements.txt
 
-      - name: Run Unit Tests
+      - name: Validate Python Syntax
         run: |
-          echo "Running tests..."
-          python -m unittest discover || true
+          python -m py_compile app.py
 
-      - name: Run Security Scan
+      - name: Build Docker Image
+        run: |
+          docker build -t flask-app .
+
+      - name: Trivy Security Scan
         uses: aquasecurity/trivy-action@master
         with:
           scan-type: fs
